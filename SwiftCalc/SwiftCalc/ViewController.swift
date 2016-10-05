@@ -8,12 +8,13 @@
 
 import UIKit
 
+
 class ViewController: UIViewController {
     // MARK: Width and Height of Screen for Layout
     var w: CGFloat!
     var h: CGFloat!
     
-
+    
     // IMPORTANT: Do NOT modify the name or class of resultLabel.
     //            We will be using the result label to run autograded tests.
     // MARK: The label to display our calculations
@@ -21,9 +22,12 @@ class ViewController: UIViewController {
     
     // TODO: This looks like a good place to add some data structures.
     //       One data structure is initialized below for reference.
-    var someDataStructure: [String] = [""]
     
-
+    
+    var arrayNum = [String]()
+    var arrayOp = [String]()
+    var checkOp = false
+    
     override func viewDidLoad() {
         super.viewDidLoad()
         view = UIView(frame: UIScreen.main.bounds)
@@ -43,54 +47,139 @@ class ViewController: UIViewController {
         // Dispose of any resources that can be recreated.
     }
     
-    // TODO: A method to update your data structure(s) would be nice.
-    //       Modify this one or create your own.
-    func updateSomeDataStructure(_ content: String) {
-        print("Update me like one of those PCs")
-    }
-    
     // TODO: Ensure that resultLabel gets updated.
     //       Modify this one or create your own.
-    func updateResultLabel(_ content: String) {
-        print("Update me like one of those PCs")
+    func updateResultLabel() {
+        if arrayNum.count == 0 {
+            resultLabel.text = "0"
+        } else {
+            resultLabel.text = arrayNum[arrayNum.count - 1]
+        }
     }
     
-    
-    // TODO: A calculate method with no parameters, scary!
-    //       Modify this one or create your own.
-    func calculate() -> String {
-        return "0"
-    }
-    
-    // TODO: A simple calculate method for integers.
-    //       Modify this one or create your own.
-    func intCalculate(a: Int, b:Int, operation: String) -> Int {
+    func calculateDouble(a: Double, b:Double, operation: String) -> Double {
         print("Calculation requested for \(a) \(operation) \(b)")
+        
+        if operation == "+" {
+            return a + b
+        }
+        if operation == "-" {
+            return a - b
+        }
+        if operation == "*" {
+            return a * b
+        }
+        if operation == "/" {
+            return a / b
+        }
         return 0
     }
     
-    // TODO: A general calculate method for doubles
-    //       Modify this one or create your own.
-    func calculate(a: String, b:String, operation: String) -> Double {
-        print("Calculation requested for \(a) \(operation) \(b)")
-        return 0.0
+    func convertToString(a: Double) {
+        let checkInt = a.truncatingRemainder(dividingBy: 1)
+        var temp = String(a)
+        
+        if checkInt == 0 {
+            let makeInt = Int(a)
+            temp = String(makeInt)
+        }
+        
+        arrayNum.append(temp)
+        updateResultLabel()
     }
     
-    // REQUIRED: The responder to a number button being pressed.
+    
+    
+    func calculate() {
+        
+        //7 + 8 = 15 || 7 + 8 + --> 15 +
+        if arrayNum.count == 2 && !arrayOp.isEmpty {
+            let op = arrayOp.removeFirst()
+            let x = Double(arrayNum.removeFirst())
+            let y = Double(arrayNum.removeFirst())
+            
+            let doubleVal = calculateDouble(a: (x)!, b: (y)!, operation: op);
+            
+            convertToString(a: doubleVal)
+            
+            //7 + = 14
+        } else if arrayNum.count == 1 && arrayOp.count == 1 {
+            let op = arrayOp.removeFirst()
+            let x = Double(arrayNum.removeFirst())
+            
+            let doubleVal = calculateDouble(a: (x)!, b: (x)!, operation: op);
+            convertToString(a: doubleVal)
+            
+        }
+        updateResultLabel()
+        
+    }
+    
     func numberPressed(_ sender: CustomButton) {
         guard Int(sender.content) != nil else { return }
-        print("The number \(sender.content) was pressed")
-        // Fill me in!
+        
+        
+        if arrayNum.isEmpty || checkOp {
+            arrayNum.append(sender.content)
+            checkOp = false
+        } else {
+            
+            let counter = arrayNum.count - 1
+            if arrayNum[counter].characters.count < 7 {
+                arrayNum[counter] += sender.content
+            }
+        }
+        updateResultLabel()
+        
+        
     }
     
     // REQUIRED: The responder to an operator button being pressed.
     func operatorPressed(_ sender: CustomButton) {
-        // Fill me in!
+        print("The operator \(sender.content) was pressed")
+        
+        if sender.content == "C" {
+            arrayNum.removeAll()
+            arrayOp.removeAll()
+            resultLabel.text = "0"
+        } else if sender.content == "+/-" {
+            if !arrayNum.isEmpty {
+                var temp: Double = Double(arrayNum.removeLast())!
+                temp = temp - (2 * temp)
+                convertToString(a: temp)
+                
+            }
+        } else if sender.content == "=" {
+            calculate()
+        } else if sender.content == "%" {
+            if !arrayNum.isEmpty {
+                var temp: Double = Double(arrayNum.removeLast())!
+                temp = temp / 100
+                convertToString(a: temp)
+            }
+        } else {
+            arrayOp.append(sender.content)
+            checkOp = true
+            
+            if(arrayOp.count == 2) {
+                calculate()
+            }
+            
+        }
     }
     
     // REQUIRED: The responder to a number or operator button being pressed.
     func buttonPressed(_ sender: CustomButton) {
-       // Fill me in!
+        if sender.content == "." {
+            if arrayNum.isEmpty {
+                arrayNum.append("0")
+            }
+            arrayNum[arrayNum.count - 1] += "."
+            updateResultLabel()
+        }
+        if sender.content == "0" {
+            numberPressed(sender)
+        }
     }
     
     // IMPORTANT: Do NOT change any of the code below.
@@ -123,7 +212,7 @@ class ViewController: UIViewController {
             guard let container = element as? UIView else { return }
             container.backgroundColor = UIColor.black
         }
-
+        
         let margin: CGFloat = 1.0
         let buttonWidth: CGFloat = w / 4.0
         let buttonHeight: CGFloat = 100.0
@@ -133,9 +222,9 @@ class ViewController: UIViewController {
             let x = (CGFloat(i%3) + 1.0) * margin + (CGFloat(i%3) * buttonWidth)
             let y = (CGFloat(i/3) + 1.0) * margin + (CGFloat(i/3) * buttonHeight)
             calcContainer.addUIElement(CustomButton(content: el), text: el,
-            frame: CGRect(x: x, y: y, width: buttonWidth, height: buttonHeight)) { element in
-                guard let button = element as? UIButton else { return }
-                button.addTarget(self, action: #selector(operatorPressed), for: .touchUpInside)
+                                       frame: CGRect(x: x, y: y, width: buttonWidth, height: buttonHeight)) { element in
+                                        guard let button = element as? UIButton else { return }
+                                        button.addTarget(self, action: #selector(operatorPressed), for: .touchUpInside)
             }
         }
         // MARK: Second Row 3x3
@@ -143,9 +232,9 @@ class ViewController: UIViewController {
             let x = (CGFloat(i%3) + 1.0) * margin + (CGFloat(i%3) * buttonWidth)
             let y = (CGFloat(i/3) + 1.0) * margin + (CGFloat(i/3) * buttonHeight)
             calcContainer.addUIElement(CustomButton(content: digit), text: digit,
-            frame: CGRect(x: x, y: y+101.0, width: buttonWidth, height: buttonHeight)) { element in
-                guard let button = element as? UIButton else { return }
-                button.addTarget(self, action: #selector(numberPressed), for: .touchUpInside)
+                                       frame: CGRect(x: x, y: y+101.0, width: buttonWidth, height: buttonHeight)) { element in
+                                        guard let button = element as? UIButton else { return }
+                                        button.addTarget(self, action: #selector(numberPressed), for: .touchUpInside)
             }
         }
         // MARK: Vertical Column of Operators
@@ -153,11 +242,11 @@ class ViewController: UIViewController {
             let x = (CGFloat(3) + 1.0) * margin + (CGFloat(3) * buttonWidth)
             let y = (CGFloat(i) + 1.0) * margin + (CGFloat(i) * buttonHeight)
             calcContainer.addUIElement(CustomButton(content: el), text: el,
-            frame: CGRect(x: x, y: y, width: buttonWidth, height: buttonHeight)) { element in
-                guard let button = element as? UIButton else { return }
-                button.backgroundColor = UIColor.orange
-                button.setTitleColor(UIColor.white, for: .normal)
-                button.addTarget(self, action: #selector(operatorPressed), for: .touchUpInside)
+                                       frame: CGRect(x: x, y: y, width: buttonWidth, height: buttonHeight)) { element in
+                                        guard let button = element as? UIButton else { return }
+                                        button.backgroundColor = UIColor.orange
+                                        button.setTitleColor(UIColor.white, for: .normal)
+                                        button.addTarget(self, action: #selector(operatorPressed), for: .touchUpInside)
             }
         }
         // MARK: Last Row for big 0 and .
@@ -165,12 +254,12 @@ class ViewController: UIViewController {
             let myWidth = buttonWidth * (CGFloat((i+1)%2) + 1.0) + margin * (CGFloat((i+1)%2))
             let x = (CGFloat(2*i) + 1.0) * margin + buttonWidth * (CGFloat(i*2))
             calcContainer.addUIElement(CustomButton(content: el), text: el,
-            frame: CGRect(x: x, y: 405, width: myWidth, height: buttonHeight)) { element in
-                guard let button = element as? UIButton else { return }
-                button.addTarget(self, action: #selector(buttonPressed), for: .touchUpInside)
+                                       frame: CGRect(x: x, y: 405, width: myWidth, height: buttonHeight)) { element in
+                                        guard let button = element as? UIButton else { return }
+                                        button.addTarget(self, action: #selector(buttonPressed), for: .touchUpInside)
             }
         }
     }
-
+    
 }
 
